@@ -1,33 +1,43 @@
-const fs = require("fs");
+const fs = require("fs").promises;
 
 class ProductManager {
   constructor(path) {
-    this.path = "../clase4/products.js";
+    this.path = path;
     this.nextId = 1;
-    if (!fs.existsSync(this.path)) {
-      fs.writeFileSync(this.path, "[]");
+    this.ensureFileExists();
+  }
+
+  async ensureFileExists() {
+    try {
+      await fs.access(this.path);
+    } catch (error) {
+      await fs.writeFile(this.path, "[]");
     }
   }
 
-  addProduct(product) {
-    const products = this.getProducts();
+  async addProduct(product) {
+    const products = await this.getProducts();
     const existingProduct = products.find((p) => p.code === product.code);
     if (existingProduct) {
       throw new Error("Product already exists");
     }
     const newProduct = { id: this.nextId++, ...product };
     products.push(newProduct);
-    fs.writeFileSync(this.path, JSON.stringify(products));
+    await fs.writeFile(this.path, JSON.stringify(products));
     return newProduct;
   }
 
-  getProducts() {
-    const productsJson = fs.readFileSync(this.path, "utf-8");
-    return JSON.parse(productsJson);
+  async getProducts(limit) {
+    const productsJson = await fs.readFile(this.path, "utf-8");
+    const products = JSON.parse(productsJson);
+    if (limit) {
+      return products.slice(0, limit);
+    }
+    return products;
   }
 
-  getProductById(id) {
-    const products = this.getProducts();
+  async getProductById(id) {
+    const products = await this.getProducts();
     const product = products.find((p) => p.id === id);
     if (!product) {
       return null;
@@ -35,26 +45,26 @@ class ProductManager {
     return product;
   }
 
-  updateProduct(id, updatedFields) {
-    const products = this.getProducts();
+  async updateProduct(id, updatedFields) {
+    const products = await this.getProducts();
     const index = products.findIndex((p) => p.id === id);
     if (index === -1) {
       throw new Error("Product not found");
     }
     const updatedProduct = { ...products[index], ...updatedFields, id };
     products[index] = updatedProduct;
-    fs.writeFileSync(this.path, JSON.stringify(products));
+    await fs.writeFile(this.path, JSON.stringify(products));
     return updatedProduct;
   }
 
-  deleteProduct(id) {
-    const products = this.getProducts();
+  async deleteProduct(id) {
+    const products = await this.getProducts();
     const index = products.findIndex((p) => p.id === id);
     if (index === -1) {
       throw new Error("Product not found");
     }
     products.splice(index, 1);
-    fs.writeFileSync(this.path, JSON.stringify(products));
+    await fs.writeFile(this.path, JSON.stringify(products));
   }
 }
 
