@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Real Time Products</title>
+  </head>
+  <body>
+    <h1>List of Products</h1>
+    <ul id="productList">
+      {{#each products}}
+      <li>{{this}}</li>
+      {{/each}}
+    </ul>
+    <form id="productForm">
+      <input type="text" id="productName" name="name" placeholder="Product Name">
+      <input type="text" id="productPrice" name="price" placeholder="Product Price">
+      <button type="submit">Add Product</button>
+    </form>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+      
+      // When the form is submitted, emit a 'newProduct' event with the product data
+      document.querySelector('#productForm').addEventListener('submit', (event) => {
+        event.preventDefault();
+        const productName = document.querySelector('#productName').value;
+        const productPrice = document.querySelector('#productPrice').value;
+        const product = { name: productName, price: productPrice };
+        socket.emit('newProduct', product);
+        document.querySelector('#productName').value = '';
+        document.querySelector('#productPrice').value = '';
+      });
+      
+      // When a 'productAdded' event is received, add the new product to the list
+      socket.on('productAdded', (product) => {
+        const productList = document.querySelector('#productList');
+        const newProduct = document.createElement('li');
+        newProduct.textContent = `${product.name} - $${product.price}`;
+        productList.appendChild(newProduct);
+      });
+      
+      // When a 'productDeleted' event is received, remove the deleted product from the list
+      socket.on('productDeleted', (productName) => {
+        const productList = document.querySelector('#productList');
+        const productToDelete = Array.from(productList.children).find((li) => li.textContent.includes(productName));
+        if (productToDelete) {
+          productList.removeChild(productToDelete);
+        }
+      });
+    </script>
+  </body>
+</html>
+

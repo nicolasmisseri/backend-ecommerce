@@ -1,8 +1,14 @@
 const express = require("express");
 const ProductManager = require("./ProductManager");
-
 const app = express();
 const port = 8080;
+const http = require("http").Server(app);
+const io = require("socket.io")(http);
+const handlebars = require("express-handlebars");
+
+// Set up handlebars as the view engine
+app.engine("handlebars", handlebars());
+app.set("view engine", "handlebars");
 
 const productRouter = require("./productRouter");
 const cartRouter = require("./cartRouter");
