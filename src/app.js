@@ -4,6 +4,11 @@ const ProductManager = require("./ProductManager");
 const app = express();
 const port = 8080;
 
+const productRouter = require("./productRouter");
+const cartRouter = require("./cartRouter");
+app.use("/api/products", productRouter);
+app.use("/api/carts", cartRouter);
+
 const productManager = new ProductManager("./products.json");
 
 app.get("/products", async (req, res) => {
